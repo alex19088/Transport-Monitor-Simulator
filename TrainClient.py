@@ -3,6 +3,8 @@ import time
 import random
 import threading
 
+# HI alex
+
 # C:\Users\jeonchri\Desktop\python files\TransportProject
 class TrainClient:
     def __init__(self, host='localhost', port= 65000, xy= [0,0], current_stop="Queens Plaza", next_stop= "Herald Square", status="On Time", eta=2, done=False):
