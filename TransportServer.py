@@ -54,7 +54,7 @@ class TransportServer:
         # Starting the live time
         timer.start()
         print(f"[07:30:00] SERVER STARTED at Jeon Park Control Center")
-
+        
         # constantly accepting connections from multiple clients
         while not self.done:
             client, addr = server_socket.accept() # returns a client socket object to communicate, addr is IP and port #
@@ -98,7 +98,7 @@ class TransportServer:
     def time_update(self):
         while True:
             time.sleep(1)
-            self.seconds += 1
+            self.minutes += 1
 
             if self.seconds == 60:
                 self.seconds = 0

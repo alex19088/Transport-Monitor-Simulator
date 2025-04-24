@@ -13,7 +13,7 @@ class TrainClient:
         self.xy = xy
         self.current_stop = current_stop
         self.next_stop = next_stop
-        self.__status = status
+        self.status = status
         self.eta = eta
         self.done = done
 
