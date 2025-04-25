@@ -18,6 +18,7 @@ class TransportServer:
         self.done = done
         self.command = None # Wrapper for choosing a specific action in LiveCommand
         self.live_command = ServerCommands.LiveCommand() # Receiver in Command Design (has the actual logic for commands)
+        self.timeReady = timeReady
     
     # Setter method for command
     def set_command(self, command):
