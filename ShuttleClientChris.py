@@ -111,7 +111,13 @@ class ShuttleClient:
         udp_thread = threading.Thread(target=self.UDP_beacon)
         udp_thread.start()
 
-        while not self.done:                     
+        # recieving messages from server 
+        while not self.done:                
+            
+            # Set the status of the shuttle to active so it can prepare to start 
+            if client.recv(1024).decode() == "ready":
+               self.status = "Active"
+
            # Receiving a message from the server and decoding it (not using rn)
            print(client.recv(1024).decode())
   

@@ -9,7 +9,7 @@ import ServerCommands
 host = socket.gethostbyname(socket.gethostname())
 
 class TransportServer:
-    def __init__(self, host='localhost', port=65000, hours=7, minutes=30, seconds=0, done=False):
+    def __init__(self, host='localhost', port=65000, hours=7, minutes=30, seconds=0, done=False, timeReady = False):
         self.host = host
         self.port = port 
         self.hours = hours
@@ -95,6 +95,12 @@ class TransportServer:
     # Purpose: To handle tcp connections with clients
     def TCP_handler(self, client):
         while not self.done:
+            
+            # If its 8am then let the shuttle know it can now activate 
+            if self.timeReady == True:
+                response8am = "ready"
+                client.sendall(response8am.encode())
+
             try:
                 data = client.recv(1024)
                 if data:
@@ -127,6 +133,11 @@ class TransportServer:
     # Purpose: To update the global time 
     def time_update(self):
         while not self.done:
+            
+            # This notifier is for the shuttle, for when it passes 8:00 am
+            if time.minutes >= 8:
+                self.timeReady = True
+
             time.sleep(1)
             self.minutes += 1
 
@@ -176,12 +187,6 @@ class TransportServer:
         # Cutting the connection from the clients
         print("Server shut down!")
         server_socket.close()
-        
-
-            
-            
-        
-
 
 if __name__ == "__main__":
     server = TransportServer()
