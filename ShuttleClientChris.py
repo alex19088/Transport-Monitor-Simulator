@@ -46,29 +46,28 @@ class ShuttleClient:
     # Contract: ShuttleSim(self) 
     # Purpose: To simulate shuttlemovement
     def ShuttleSim(self):
-        if self.status != "Standby":  # Makes sure the shuttle cant start until 8 AM
-            while True:     # !! we need to change this *while* to wait for the command from server controls 
-                if self.status == "Active":
-                    time.sleep(1)
-                elif self.status == "Delayed": 
-                    time.sleep(1.1)
+        while True:     # !! we need to change this *while* to wait for the command from server controls 
+            if self.status == "Active":
+                time.sleep(1)
+            elif self.status == "Delayed": 
+                time.sleep(1.1)
 
-                # Incrementing the coordinates by a random value between .1-.3
-                random_num = random.uniform(0.1,0.3)
-                self.xy[1] += random_num
-            
-                # if 30 minutes passed, the shuttle will reach JFK, represented by the '36'
-                if self.xy[1] >= 36:
-                    self.current_stop = "JFK Airport"
-                    self.waiting_at_jfk = True  # This flag will let repr know the shuttle has arrived 
+            # Incrementing the coordinates by a random value between .1-.3
+            random_num = random.uniform(0.1,0.3)
+            self.xy[1] += random_num
+        
+            # if 30 minutes passed, the shuttle will reach JFK, represented by the '36'
+            if self.xy[1] >= 36:
+                self.current_stop = "JFK Airport"
+                self.waiting_at_jfk = True  # This flag will let repr know the shuttle has arrived 
 
-                    self.getArrival() # calculate next arrival time 
+                self.getArrival() # calculate next arrival time 
 
-                    time.sleep(20) # will wait 20 minutes (or real life seconds) before a new shuttle starts
-                    self.waiting_at_jfk = False  # Now the shuttle is no longer waiting 
+                time.sleep(20) # will wait 20 minutes (or real life seconds) before a new shuttle starts
+                self.waiting_at_jfk = False  # Now the shuttle is no longer waiting 
 
-                    self.xy[1] = 0 # this starts the shuttle back at penn 
-                    self.current_stop = "Penn Station"
+                self.xy[1] = 0 # this starts the shuttle back at penn 
+                self.current_stop = "Penn Station"
 
     # Contract:
     # Purpose: Updates shuttle location and status via TCP to the central server every 60 seconds.
@@ -96,11 +95,6 @@ class ShuttleClient:
         # Sending a message
         client.send('Vehicle CONNECTED: S01 (Shuttle) via TCP '.encode())
 
-        # Starting the shuttle route 
-        shuttle_thread = threading.Thread(target=self.ShuttleSim)
-        shuttle_thread.start()
-
-
         # TCP connection
         status_thread = threading.Thread(target=self.update_statusTCP,args=(client,))
         status_thread.start()
@@ -118,6 +112,11 @@ class ShuttleClient:
 
             # Receiving a message from the server and decoding it (not using rn)
             print(client.recv(1024).decode())
+
+        # Starting the shuttle route 
+        if self.status != "Standby":  # Makes sure the shuttle cant start until 8 AM
+            shuttle_thread = threading.Thread(target=self.ShuttleSim)
+            shuttle_thread.start()
   
         print("Disconnected from the server!")
         client.close()
