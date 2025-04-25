@@ -2,11 +2,9 @@ import socket
 import time
 import random
 import threading
-# For desktop
-# C:\Users\Chris Jeon\OneDrive\Desktop\python files\LiveTransport
 
-# For laptop
-# C:\Users\jeonchri\Desktop\python files\TransportProject
+# For desktop
+# C:\Users\Chris Jeon\OneDrive\Desktop\python files\LiveTransport2\TransportProjectOOP2
 
 class BusClient:
     def __init__(self, host='localhost', port= 65000, xy= [40,-75], current_stop="Port Authority Terminal", status="On Time", eta=2, done=False):
@@ -24,7 +22,7 @@ class BusClient:
 
     # Purpose: To simulate BusB101's route (add time.sleep(5) and repr here)
     def bus_simulation(self):
-        while True:
+        while not self.done:
             time.sleep(1)
             # Incrementing the coordinates by a random value between 0 and 2
             random_num = random.uniform(0,0.3)
@@ -35,7 +33,6 @@ class BusClient:
                 self.eta = 2
             else:
                 self.eta -= 0.02
-        
 
             # 7th avenue
             if self.xy[1] >= -65 and self.xy[1] < -50:
@@ -52,7 +49,7 @@ class BusClient:
     
     # Purpose: Updates bus location and status via TCP to the central server every 60 seconds.
     def update_status(self, client):
-        while True:
+        while not self.done:
             # Display to the client along with send to server
             print(self.__repr__())
             client.send(self.__repr__().encode())
@@ -63,40 +60,42 @@ class BusClient:
 
     def send_message(self):
         
-        client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         # Connecting to the server
-        client.connect((self.host, self.port))
+        client_socket.connect((self.host, self.port))
         # Sending a message
-        client.send('Vehicle CONNECTED: B101 (Bus) via TCP '.encode())
+        client_socket.send('Vehicle CONNECTED: B101 (Bus) via TCP '.encode())
 
         # Starting the route
         bus_thread = threading.Thread(target=self.bus_simulation)
         bus_thread.start()
 
-        # TCP connection
-        status_thread = threading.Thread(target=self.update_status,args=(client,))
-        status_thread.start()
-
-        # UDP beacon
-        udp_thread = threading.Thread(target=self.UDP_beacon)
-        udp_thread.start()
-
         while not self.done:
-           # Receiving a message from the server and decoding it (not using rn)
-           print(client.recv(1024).decode())
+            # Receiving a message from the server and decoding it (not using rn)
+            #print(client.recv(1024).decode())
+
+            # TCP connection
+            status_thread = threading.Thread(target=self.update_status,args=(client_socket,))
+            status_thread.start()
+
+            input("Press enter to disconnect\n")
+            self.done = True
+
 
            
 
+           
+        client_socket.send('Vehicle DISCONNECTED: B101 (Bus)'.encode())
             
         print("Disconnected from the server!")
-        client.close()
+        client_socket.close()
         
 
     
      # Purpose: Sends UDP beacon every 10 seconds to broadcast its latest coords for the public dashboard
     def UDP_beacon(self):
         client = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-        while True:
+        while not self.done:
             client.sendto(f"[UDP] B101 -> Real-Time Location Update: Latitude: {round(self.xy[0],4)} Longitude: {round(self.xy[1],4)} Status: On Time".encode(), (self.host, self.port))
             time.sleep(10)
 
@@ -105,6 +104,10 @@ class BusClient:
 
 if __name__ == "__main__":
     client = BusClient()
+    # Starting the TCP connection
     threading.Thread(target=client.send_message).start()
+
+    # Starting the UDP beacon
+    threading.Thread(target=client.UDP_beacon).start()
     
     

@@ -3,9 +3,8 @@ import time
 import random
 import threading
 
-# HI alex
-
-# C:\Users\jeonchri\Desktop\python files\TransportProject
+# For desktop
+# C:\Users\Chris Jeon\OneDrive\Desktop\python files\LiveTransport2\TransportProjectOOP2
 class TrainClient:
     def __init__(self, host='localhost', port= 65000, xy= [0,0], current_stop="Queens Plaza", next_stop= "Herald Square", status="On Time", eta=2, done=False):
         self.host = host
@@ -66,57 +65,31 @@ class TrainClient:
                 if counter == 2:
                     client.send(self.__repr__().encode())
                     counter += 1
-    
-    # Purpose: To determine the status of the train by comparing it to a fixed speed 
-    def status_setter(self):
-        # Variables for comparison with the bus speed
-        x = 0
-        y = 0
-        # Adding the variables by a fixed amount and comparing it to the actual speed 
-        while not self.done:
-            x += 0.15
-            y += 0.15
-            
-            time.sleep(1)
-            # If the bus' x and y coordinate is less than x and y, set status to delayed
-            if (self.xy[0] < x) and (self.xy[1] < y):
-                self.status = "Delayed"
-            else:
-                self.status = "On Time"
 
 
     def send_message(self):
-        client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         # Connecting to the server
-        client.connect((self.host, self.port))
+        client_socket.connect((self.host, self.port))
 
         # Sending a message to broadcast successful connection
-        client.send('Vehicle CONNECTED: T22 (Train) via TCP '.encode())
-
-        # Starting the route
-        train_thread = threading.Thread(target=self.train_simulation, args=(client,))
-        train_thread.start()
-
-        # Starting the status checker 
-        status_thread = threading.Thread(target=self.status_setter)
-        status_thread.start()
-
-        while not self.done:
-
-            # UDP beacon
-            udp_thread = threading.Thread(target=self.UDP_beacon)
-            udp_thread.start()
+        client_socket.send('Vehicle CONNECTED: T22 (Train) via TCP '.encode())
 
         
+
+        while not self.done:
+            # Starting the route
+            train_thread = threading.Thread(target=self.train_simulation, args=(client_socket,))
+            train_thread.start()
             # Receiving a message from the server and decoding it (not using rn)
             #print(client.recv(1024).decode())
 
             input("Press enter to disconnect\n")
             self.done = True
 
-            
+        client_socket.send('Vehicle DISCONNECTED: B101 (Bus)'.encode())
         print("Disconnected from the server!")
-        client.close()
+        client_socket.close()
         
     
     # Purpose: Sends UDP beacon every 10 seconds to broadcast its latest coords for the public dashboard
@@ -129,5 +102,10 @@ class TrainClient:
 
 if __name__ == "__main__":
     client = TrainClient()
-    client.send_message()
+    # Starting the TCP connection
+    threading.Thread(target=client.send_message).start()
+
+    # Starting the UDP beacon
+    threading.Thread(target=client.UDP_beacon).start()
+    
             
