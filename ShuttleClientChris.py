@@ -31,9 +31,7 @@ class ShuttleClient:
             hour += minute // 60
             minute = minute % 60
         # Format back to hour:minute 
-        self.nextdeparture = f"{hour}:{minute:02d}"
-# !!!! ok yes i used chat for this but i tried it myself first and this should format it nicely. we can delete it if u want
-        
+        self.nextdeparture = f"{hour}:{minute:02d}"        
 
     # Contract: 
     # Purpose: Format for displaying location and status to server (TCP). This one is every minute 
@@ -85,7 +83,7 @@ class ShuttleClient:
     def UDP_beacon(self):
         client = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         while True:
-            client.sendto(f"[UDP] S01 -> Real-Time Location Update: Latitude: {self.xy[0]} Longitude: {round(self.xy[1],4)} Status: {self.status}".encode(), (self.host, self.port))
+            client.sendto(f"[UDP] S01 -> Real-Time Location Update: Latitude: {self.xy[0]} Longitude: {self.xy[1]} Status: {self.status}".encode(), (self.host, self.port))
             time.sleep(10)
 
     # Contract:
