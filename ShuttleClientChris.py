@@ -7,7 +7,7 @@ import random
 
 # Purpose: Wrapper class to handle all shuttle related movement and updates 
 class ShuttleClient:
-    def __init__(self, host, port, xy=[40,0], canstart = False, start=False, done=False, status="Standby", current_stop="Penn Station", next_stop="JFK Airport", nextdeparture = "8:00"):
+    def __init__(self, host='localhost', port=65000, xy=[40,0], canstart = False, start=False, done=False, status="Standby", current_stop="Penn Station", next_stop="JFK Airport", nextdeparture = "8:00"):
         self.host = host
         self.port = port
         self.xy = xy

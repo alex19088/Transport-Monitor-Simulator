@@ -29,7 +29,7 @@ class TransportServer:
     
     # Purpose: Interface for sending admin commands to clients via TCP (WIP, make sure to add ID as a parameter)
     def admin_interface(self):
-        print("|CONTROL PANEL|\nAvailable Commands: DELAY [id]\n seconds\nREROUTE [id]\nSHUTDOWN [id] START_ROUTE [id]\nOr type 'q' to close the server\n")
+        print("|CONTROL PANEL|\nAvailable Commands: DELAY [id] seconds\n REROUTE [id]\nSHUTDOWN [id] START_ROUTE [id]\nOr type 'q' to close the server\n")
         while not self.done:
             command = input("\n[COMMAND/ID]: ").strip()
 

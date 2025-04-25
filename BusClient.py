@@ -6,6 +6,8 @@ import threading
 # For desktop
 # C:\Users\Chris Jeon\OneDrive\Desktop\python files\LiveTransport2\TransportProjectOOP2
 
+# For laptop
+# C:\Users\jeonchri\Desktop\python files\TransportProject
 class BusClient:
     def __init__(self, host='localhost', port= 65000, xy= [40,-75], current_stop="Port Authority Terminal", status="On Time", eta=2, done=False):
         self.host = host
@@ -77,6 +79,7 @@ class BusClient:
             # TCP connection
             status_thread = threading.Thread(target=self.update_status,args=(client_socket,))
             status_thread.start()
+
 
             input("Press enter to disconnect\n")
             self.done = True
