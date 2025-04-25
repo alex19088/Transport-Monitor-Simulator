@@ -118,8 +118,8 @@ class ShuttleClient:
             if client.recv(1024).decode() == "ready":
                self.status = "Active"
 
-           # Receiving a message from the server and decoding it (not using rn)
-           print(client.recv(1024).decode())
+            # Receiving a message from the server and decoding it (not using rn)
+            print(client.recv(1024).decode())
   
         print("Disconnected from the server!")
         client.close()

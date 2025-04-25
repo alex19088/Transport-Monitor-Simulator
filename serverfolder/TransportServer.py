@@ -135,7 +135,7 @@ class TransportServer:
         while not self.done:
             
             # This notifier is for the shuttle, for when it passes 8:00 am
-            if time.minutes >= 8:
+            if self.hours >= 8:
                 self.timeReady = True
 
             time.sleep(1)
