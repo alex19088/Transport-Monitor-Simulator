@@ -5,6 +5,9 @@ import ServerCommands
 # For desktop
 # C:\Users\Chris Jeon\OneDrive\Desktop\python files\LiveTransport2\TransportProjectOOP2
 
+# alex laptop
+# C:\Users\gimoural\OneDrive - Seton Hall University\Desktop\python files\H3 Chris GITHUB\TransportProjectOOP2 
+
 # For getting private local IP address dynamically
 host = socket.gethostbyname(socket.gethostname())
 

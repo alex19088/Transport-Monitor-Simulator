@@ -123,7 +123,9 @@ class ShuttleClient:
 
 if __name__ == "__main__":
     client = ShuttleClient()
-    threading.Thread(target=client.send_message).start()
+    main_thread = threading.Thread(target=client.send_message)
+    main_thread.start()
+    main_thread.join()
     
     
 
