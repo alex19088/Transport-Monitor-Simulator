@@ -12,7 +12,7 @@ import ServerCommands
 host = socket.gethostbyname(socket.gethostname())
 
 class TransportServer:
-    def __init__(self, host='localhost', port=65000, hours=7, minutes=30, seconds=0, done=False, timeReady = False):
+    def __init__(self, host='localhost', port=65000, hours=7, minutes=30, seconds=0, done=False, timeReady = False, client_list=[]):
         self.host = host
         self.port = port 
         self.hours = hours
@@ -22,6 +22,7 @@ class TransportServer:
         self.command = None # Wrapper for choosing a specific action in LiveCommand
         self.live_command = ServerCommands.LiveCommand() # Receiver in Command Design (has the actual logic for commands)
         self.timeReady = timeReady
+        self.client_list = client_list
     
     # Setter method for command
     def set_command(self, command):
@@ -181,6 +182,7 @@ class TransportServer:
                 # Start client handler
                 clients_thread = threading.Thread(target=self.TCP_handler, args=(client,))
                 clients_thread.start()
+                self.client_list.append(clients_thread)
                 
             # If no connection, keep trying to receive a connection
             except socket.timeout:
@@ -190,15 +192,31 @@ class TransportServer:
         
         # Cutting the connection from the clients
         print("Server shut down!")
+
         server_socket.close()
+        
 
 if __name__ == "__main__":
     server = TransportServer()
-    threading.Thread(target=server.start_server).start()
+    tcp_thread = threading.Thread(target=server.start_server)
+    tcp_thread.start()
      
-    threading.Thread(target=server.UDP_handler).start()
+    udp_thread = threading.Thread(target=server.UDP_handler)
+    udp_thread.start()
    
-    threading.Thread(target=server.admin_interface).start()
+    admin_thread = threading.Thread(target=server.admin_interface)
+    admin_thread.start()
+    while not server.done:
+        time.sleep(1)
+
+    
+    tcp_thread.join()
+    udp_thread.join()
+    admin_thread.join()
+
+    for client_thread in server.client_list:
+        client_thread.join()
+        
 
     
 
