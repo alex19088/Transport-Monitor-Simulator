@@ -35,7 +35,7 @@ class TransportServer:
     
     # Purpose: Interface for sending admin commands to clients via TCP (WIP, make sure to add ID as a parameter)
     def admin_interface(self, client):
-        print("|CONTROL PANEL|\nAvailable Commands: DELAY [id] seconds\n REROUTE [id]\nSHUTDOWN [id] START_ROUTE [id]\nOr type 'q' to close the server\n")
+        print("\n|CONTROL PANEL|\nAvailable Commands:\nDELAY [id] [seconds]\nREROUTE [id]\nSHUTDOWN [id]\nSTART_ROUTE [id]\n-Or type 'q' to close the server-\n")
         while not self.done:
             command = input("\n[COMMAND/ID]: ").strip()
 
@@ -100,12 +100,14 @@ class TransportServer:
 
     # Purpose: To handle tcp connections with clients
     def TCP_handler(self, client):
+        ready_sent = False  # Flag for if the ready message has been sent
         while not self.done:
-            
-            # If its 8am then let the shuttle know it can now activate 
-            if self.timeReady == True:
+
+            # To send a flag to the shuttleClient that it is elgigible to start
+            if self.timeReady and not ready_sent:
                 response8am = "ready"
                 client.sendall(response8am.encode())
+                ready_sent = True  # Ensure the message is sent only once
 
             try:
                 data = client.recv(1024)
@@ -141,7 +143,7 @@ class TransportServer:
         while not self.done:
             
             # This notifier is for the shuttle, for when it passes 8:00 am
-            if self.hours >= 8:
+            if self.hours >= 8 and self.minutes == 0 and self.seconds == 0:
                 self.timeReady = True
 
             time.sleep(1)
