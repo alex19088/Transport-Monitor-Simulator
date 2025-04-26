@@ -88,44 +88,55 @@ class ShuttleClient:
     # Contract:
     # Purpose: handle sending messages back and forth with server 
     def send_message(self):
-        
         client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        # Connecting to the server
-        client.connect((self.host, self.port))
-        # Sending a message
-        client.send('Vehicle CONNECTED: S01 (Shuttle) via TCP '.encode())
+        try:
+            # Connecting to the server
+            client.connect((self.host, self.port))
+            # Sending a message to indicate the shuttle is connected
+            client.send('Vehicle CONNECTED: S01 (Shuttle) via TCP '.encode())
 
-        # TCP connection
-        status_thread = threading.Thread(target=self.update_statusTCP,args=(client,))
-        status_thread.start()
+            # Start the TCP status update thread
+            status_thread = threading.Thread(target=self.update_statusTCP, args=(client,))
+            status_thread.start()
 
-        # UDP beacon
-        udp_thread = threading.Thread(target=self.UDP_beacon)
-        udp_thread.start()
+            # Start the UDP beacon thread
+            udp_thread = threading.Thread(target=self.UDP_beacon)
+            udp_thread.start()
 
-        # recieving messages from server 
-        while not self.done:                
-            
-            # Set the status of the shuttle to active so it can prepare to start 
-            if client.recv(1024).decode() == "ready":
-               self.status = "Active"
+            # Receiving messages from the server
+            while not self.done:
+                try:
+                    msg = client.recv(1024).decode()
+                    if msg:
+                        print(f"Server: {msg}")  # Log the received message for debugging (also used for .txt log)
 
-            # Receiving a message from the server and decoding it (not using rn)
-            print(client.recv(1024).decode())
+                        # Handle different commands from the server
+                        if msg == "ready":
+                            self.status = "Active"
+                        elif msg == "delay":
+                            print("Shuttle is delayed.")
+                            self.status = "Delayed"
+                        elif msg == "shutdown":
+                            print("Shutting down shuttle.")
+                            self.done = True
+                        elif msg == "start_route":
+                            print("Starting shuttle route.")
+                            if self.status != "Standby":  # Ensure shuttle can't start until ready
+                                shuttle_thread = threading.Thread(target=self.ShuttleSim)
+                                shuttle_thread.start()
+                        else:
+                            print(f"Unknown command received: {msg}")
+                except:
+                    print(f"Error receiving message:")
+                    break
 
-        # Starting the shuttle route 
-        if self.status != "Standby":  # Makes sure the shuttle cant start until 8 AM
-            shuttle_thread = threading.Thread(target=self.ShuttleSim)
-            shuttle_thread.start()
-  
-        print("Disconnected from the server!")
-        client.close()
+        finally:
+            print("Disconnected from the server!")
+            client.close()
 
 if __name__ == "__main__":
     client = ShuttleClient()
-    main_thread = threading.Thread(target=client.send_message)
-    main_thread.start()
-    main_thread.join()
+    threading.Thread(target=client.send_message).start()
     
     
 

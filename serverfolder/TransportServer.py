@@ -143,7 +143,7 @@ class TransportServer:
                 self.timeReady = True
 
             time.sleep(1)
-            self.minutes += 1
+            self.minutes += 1 # shouldnt this be seconds?
 
             if self.seconds == 60:
                 self.seconds = 0
@@ -199,6 +199,8 @@ if __name__ == "__main__":
     threading.Thread(target=server.UDP_handler).start()
    
     threading.Thread(target=server.admin_interface).start()
+
+    
 
     
    
