@@ -4,7 +4,8 @@ import threading
 import ServerCommands
 # For desktop
 # C:\Users\Chris Jeon\OneDrive\Desktop\python files\LiveTransport2\TransportProjectOOP2
-
+# chris laptop
+# C:\Users\jeonchri\Desktop\python files\TransportProject
 # alex laptop
 # C:\Users\gimoural\OneDrive - Seton Hall University\Desktop\python files\H3 Chris GITHUB\TransportProjectOOP2 
 
@@ -12,7 +13,7 @@ import ServerCommands
 host = socket.gethostbyname(socket.gethostname())
 
 class TransportServer:
-    def __init__(self, host='localhost', port=65000, hours=7, minutes=30, seconds=0, done=False, timeReady = False):
+    def __init__(self, host='localhost', port=65000, hours=7, minutes=30, seconds=0, done=False, timeReady = False, client_list=[]):
         self.host = host
         self.port = port 
         self.hours = hours
@@ -22,6 +23,7 @@ class TransportServer:
         self.command = None # Wrapper for choosing a specific action in LiveCommand
         self.live_command = ServerCommands.LiveCommand() # Receiver in Command Design (has the actual logic for commands)
         self.timeReady = timeReady
+        self.client_list = client_list
     
     # Setter method for command
     def set_command(self, command):
@@ -32,7 +34,7 @@ class TransportServer:
         self.command.execute()
     
     # Purpose: Interface for sending admin commands to clients via TCP (WIP, make sure to add ID as a parameter)
-    def admin_interface(self):
+    def admin_interface(self, client):
         print("|CONTROL PANEL|\nAvailable Commands: DELAY [id] seconds\n REROUTE [id]\nSHUTDOWN [id] START_ROUTE [id]\nOr type 'q' to close the server\n")
         while not self.done:
             command = input("\n[COMMAND/ID]: ").strip()
@@ -54,7 +56,7 @@ class TransportServer:
                 # Execute the delay command for the given number seconds to the chosen client
                 print(f"[COMMAND] {action} issued to {id} for {seconds} seconds.")
 
-                delay_command = ServerCommands.DelayCommand(self.live_command, id, seconds)
+                delay_command = ServerCommands.DelayCommand(self.live_command, client, seconds)
                 self.set_command(delay_command)
                 self.send_command()
 
@@ -181,6 +183,10 @@ class TransportServer:
                 # Start client handler
                 clients_thread = threading.Thread(target=self.TCP_handler, args=(client,))
                 clients_thread.start()
+                self.client_list.append(clients_thread)
+
+                admin_thread = threading.Thread(target=server.admin_interface, args=(client,))
+                admin_thread.start()
                 
             # If no connection, keep trying to receive a connection
             except socket.timeout:
@@ -190,15 +196,29 @@ class TransportServer:
         
         # Cutting the connection from the clients
         print("Server shut down!")
+
         server_socket.close()
+        
 
 if __name__ == "__main__":
     server = TransportServer()
-    threading.Thread(target=server.start_server).start()
+    tcp_thread = threading.Thread(target=server.start_server)
+    tcp_thread.start()
      
-    threading.Thread(target=server.UDP_handler).start()
+    udp_thread = threading.Thread(target=server.UDP_handler)
+    udp_thread.start()
    
-    threading.Thread(target=server.admin_interface).start()
+    while not server.done:
+        time.sleep(1)
+
+    
+    tcp_thread.join()
+    udp_thread.join()
+   
+
+    for client_thread in server.client_list:
+        client_thread.join()
+        
 
     
 
