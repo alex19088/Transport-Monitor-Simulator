@@ -117,7 +117,27 @@ class BusClient:
             time.sleep(60)
             
             
-
+    # Purpose : To receive server messages
+    def receive_server_messages(self, client_socket):
+        while not self.done:
+            try:
+                data = client_socket.recv(1024)
+                if data:
+                    message = data.decode()
+                    print(f"[SERVER]: {message}")
+                    self.command_handler(message)  # handle messages
+            except:
+                break
+    # To handle commands sent from the server
+    def command_handler(self, message):
+        parts = message.split()
+        if parts[0] == "DELAY":
+            try:
+                seconds = int(parts[1])
+                print(f"Delaying for {seconds} seconds")
+                time.sleep(seconds)
+            except ValueError:
+                print("Received invalid delay command")
 
     def send_message(self):
         
@@ -126,6 +146,9 @@ class BusClient:
         client_socket.connect((self.host, self.port))
         # Sending a message
         client_socket.send('Vehicle CONNECTED: B101 (Bus) via TCP '.encode())
+
+        recv_thread = threading.Thread(target=self.receive_server_messages, args=(client_socket,))
+        recv_thread.start()
 
         # Starting the route
         bus_thread = threading.Thread(target=self.bus_simulation)
@@ -136,6 +159,9 @@ class BusClient:
             # TCP connection
             status_thread = threading.Thread(target=self.update_status,args=(client_socket,))
             status_thread.start()
+
+            data = client_socket.recv(1024)
+            print(data.decode())
 
             # Receiving a message from the server and decoding it (not using rn)
             #message = client_socket.recv(1024).decode()

@@ -33,7 +33,7 @@ class TransportServer:
         self.command.execute()
     
     # Purpose: Interface for sending admin commands to clients via TCP (WIP, make sure to add ID as a parameter)
-    def admin_interface(self):
+    def admin_interface(self, client):
         print("|CONTROL PANEL|\nAvailable Commands: DELAY [id] seconds\n REROUTE [id]\nSHUTDOWN [id] START_ROUTE [id]\nOr type 'q' to close the server\n")
         while not self.done:
             command = input("\n[COMMAND/ID]: ").strip()
@@ -55,7 +55,7 @@ class TransportServer:
                 # Execute the delay command for the given number seconds to the chosen client
                 print(f"[COMMAND] {action} issued to {id} for {seconds} seconds.")
 
-                delay_command = ServerCommands.DelayCommand(self.live_command, id, seconds)
+                delay_command = ServerCommands.DelayCommand(self.live_command, client, seconds)
                 self.set_command(delay_command)
                 self.send_command()
 
@@ -183,6 +183,9 @@ class TransportServer:
                 clients_thread = threading.Thread(target=self.TCP_handler, args=(client,))
                 clients_thread.start()
                 self.client_list.append(clients_thread)
+
+                admin_thread = threading.Thread(target=server.admin_interface, args=(client,))
+                admin_thread.start()
                 
             # If no connection, keep trying to receive a connection
             except socket.timeout:
@@ -204,15 +207,13 @@ if __name__ == "__main__":
     udp_thread = threading.Thread(target=server.UDP_handler)
     udp_thread.start()
    
-    admin_thread = threading.Thread(target=server.admin_interface)
-    admin_thread.start()
     while not server.done:
         time.sleep(1)
 
     
     tcp_thread.join()
     udp_thread.join()
-    admin_thread.join()
+   
 
     for client_thread in server.client_list:
         client_thread.join()
