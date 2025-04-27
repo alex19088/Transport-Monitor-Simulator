@@ -82,23 +82,23 @@ class TrainClient:
         parts = message.split()
         # If the message received is DELAY
         if parts[0] == "DELAY":
-            try:
-                # Extracting the seconds from the message
-                seconds = int(parts[2])
-                print(f"Delaying for {seconds} seconds")
-                self.status = "Delayed"
-                # Delaying the simulation for the specified seconds
-                time.sleep(seconds)
-                # After the delay set the status back to "On Time"
-                self.status = "On Time"
-            # if the message is not in the correct format
-            except ValueError:
-                print("Received invalid delay command")
+        
+            self.status = "Delayed"
+            print(f"Train is now delayed.")
+                
+        # If the message received is REROUTE
+        elif parts[0] == "REROUTE":
+            print("Rerouting train to alternate route")
+            self.rerouted = True
         # If the message received is SHUTDOWN
         elif parts[0] == "SHUTDOWN":
             # Shutting down the simulation
             print("Shutting down train simulation")
             self.done = True
+        elif parts[0] == "START_ROUTE":
+            # Resuming the route (bus needs server approval to start)
+            print("Resuming route")
+            self.justArrived = False
         
 
     def send_message(self):

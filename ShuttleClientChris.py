@@ -85,6 +85,40 @@ class ShuttleClient:
             client.sendto(f"[UDP] S01 -> Real-Time Location Update: Latitude: {self.xy[0]} Longitude: {round(self.xy[1], 2)} (JFK is [40,36])".encode(), (self.host, self.port))
             time.sleep(10)
 
+    # Purpose : To receive server messages
+    def receive_server_messages(self, client_socket):
+        while not self.done:
+            try:
+                data = client_socket.recv(1024)
+                if data:
+                    message = data.decode()
+                    print(f"[SERVER]: {message}")
+                    self.command_handler(message)  # handle messages
+            except:
+                break
+
+   # Purpose: To handle commands sent from the server
+    def command_handler(self, message):
+        parts = message.split()
+        # If the message received is DELAY
+        if parts[0] == "DELAY":
+        
+            self.status = "Delayed"
+            print(f"Shuttle is now delayed.")
+                
+        # If the message received is REROUTE
+        elif parts[0] == "REROUTE":
+            print("Rerouting shuttle to alternate route")
+            self.rerouted = True
+        # If the message received is SHUTDOWN
+        elif parts[0] == "SHUTDOWN":
+            # Shutting down the simulation
+            print("Shutting down shuttle simulation")
+            self.done = True
+        elif parts[0] == "START_ROUTE":
+            # Resuming the route (bus needs server approval to start)
+            print("Resuming route")
+            self.justArrived = False
     
     # Purpose: handle sending messages back and forth with server 
     def send_message(self):

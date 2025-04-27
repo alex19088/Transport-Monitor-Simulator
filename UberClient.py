@@ -73,10 +73,10 @@ class UberClient:
                 # Close the TCP connection to simulate a dropout
                 client_socket.close()
 
-                # Retry logic to re-establish the TCP connection
+                # Retry logic to re-establish the TCP connection 
                 while True:
                     try:
-                        print("Attempting to re-establish TCP connection...")
+                        print("Attempting to reestablish TCP connection...")
                         client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
                         client_socket.connect((self.host, self.port))
                         print("TCP connection re-established!")
@@ -166,7 +166,7 @@ class UberClient:
     def UDP_beacon(self):
         client = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         while not self.done:
-            client.sendto(f"[UDP] U991 -> Real-Time Approx Location Update: {self.current_stop} Status: {self.status}".encode(), (self.host, self.port))
+            client.sendto(f"[UDP] U991 -> Real-Time Approx Location Update: {self.current_stop} | Status: {self.status}".encode(), (self.host, self.port))
             time.sleep(10)
 
 
