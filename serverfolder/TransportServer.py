@@ -17,22 +17,22 @@ class TransportServer:
     def __init__(self, host='localhost', port=65000, hours=7, minutes=30, seconds=0, done=False, timeReady = False, client_list=[]):
         self.host = host
         self.port = port 
-        self.hours = hours # for live clock
-        self.minutes = minutes # for live clock
-        self.seconds = seconds # for live clock
-        self.done = done # flag for shutting down the server
-        self.command = None # wrapper for choosing a specific action in LiveCommand
+        self.hours = hours
+        self.minutes = minutes
+        self.seconds = seconds
+        self.done = done
+        self.command = None # Wrapper for choosing a specific action in LiveCommand
         self.live_command = ServerCommands.LiveCommand() # Receiver in Command Design (has the actual logic for commands)
-        self.timeReady = timeReady # flag for when the shuttle is ready to start
-        self.client_list = client_list # list of all the clients connected to the server
-        self.db = DatabaseManager() # Database connection
-        self.client_map = {} # map to keep track of client connections
+        self.timeReady = timeReady
+        self.client_list = client_list
+        self.db = DatabaseManager()
+        self.client_map = {}
 
     # Purpose: To log connections and commands to text file for future reference
-    # Contract: writeUnrecognized(user_input: str) -> None
-    def writeUnrecognized(self, user_input: str) -> None:
+    # Contract: writeFile(user_input: str) -> None
+    def writeFile(self, input: str) -> None:
         with open("logs.txt", "a") as f:
-            f.write(user_input + "\n")
+            f.write(input + "\n")
     
     # Setter method for command
     def set_command(self, command):
@@ -55,7 +55,6 @@ class TransportServer:
             # Splitting the given command into multiple strings
             parts = command.split()
             action = parts[0].upper()
-           
 
             # To close the server
             if action == "Q":
@@ -66,19 +65,31 @@ class TransportServer:
                 print("Invalid format, FORMAT -> COMMAND ID (e.g. DELAY T22)")
                 continue
 
+            # get ID of the vehicle
             id = parts[1].upper()
-            client = self.client_map.get(id)
+
+            # Get client dynamically using the ID
+            client = self.client_map.get(id)  # Get the client socket associated with the vehicle ID
+
+            if client is None:
+                print(f"[SERVER] No active client with ID {id}.")
+                continue
 
             # For DELAY
-            if action == "DELAY":
-                id = parts[1].upper()
+            elif action == "DELAY":
+                
                 print(f"[COMMAND] {action} issued to {id}.")
+
+                # Logging to the TXT file
+                self.writeFile(self, f"[COMMAND] {action} issued to {id}, [Acknowledged]")
+
                 # Logging the command to the database
                 self.db.log_admin_command(
                 vehicle_id=id,
                 command_type=action,
                 parameters="DELAY"
                 )
+
                 delay_command = ServerCommands.DelayCommand(self.live_command, client)
                 self.set_command(delay_command)
                 self.send_command()
@@ -86,27 +97,34 @@ class TransportServer:
                 
             # For REROUTE
             elif action == "REROUTE":
-                id = parts[1].upper()
+                
                 print(f"[COMMAND] {action} issued to {id}")
+
+                # Logging to the TXT file
+                self.writeFile(self, f"[COMMAND] {action} issued to {id}, [Acknowledged]")
                 # Logging the command to the database
                 self.db.log_admin_command(
                 vehicle_id=id,
                 command_type=action,
                 parameters="REROUTE"
                 )
+
                 reroute_command = ServerCommands.RerouteCommand(self.live_command, client)
                 self.set_command(reroute_command)
                 self.send_command()
                 
             # For SHUTDOWN
             elif action == "SHUTDOWN": 
-                id = parts[1].upper()
-
+                    
                 if id == "U991":
                     print(f"[COMMAND] [REJECTED] {id} -> SHUTDOWN not permitted (private ride - encapsulated rules)")
-               
+                    self.writeFile(self, f"[COMMAND] [Shutdown] issued to {id}, [REJECTED]")
+                action = parts[0].upper()
+                id = parts[1].upper()
                     
                 print(f"[COMMAND] {action} issued to {id}")
+                # Logging the command to the TXT file
+                self.writeFile(self, f"[COMMAND] {action} issued to {id}, [Acknowledged]")
 
                 # Logging the command to the database
                 self.db.log_admin_command(
@@ -121,11 +139,12 @@ class TransportServer:
 
             # For START_ROUTE
             elif action == "START_ROUTE":
+                action = parts[0].upper()
                 id = parts[1].upper()
 
                 # Start/Continue the route
                 print(f"[COMMAND] Starting/Resuming {id}'s route...")
-
+                self.writeFile(self, f"[COMMAND] Starting/Resuming issued to {id}, [Acknowledged]")
                 # Logging the command to the database
                 self.db.log_admin_command(
                 vehicle_id=id,
@@ -213,7 +232,6 @@ class TransportServer:
                 break
                 
        
-
      # Purpose: To receive messages from clients via UDP
     def UDP_handler(self):
         server_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM) #DGRAM for UDP
