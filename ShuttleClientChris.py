@@ -7,7 +7,7 @@ import random
 
 # Purpose: Wrapper class to handle all shuttle related movement and updates 
 class ShuttleClient:
-    def __init__(self, host='localhost', port=65000, xy=[40,0], canstart = False, start=False, done=False, status="Standby", current_stop="Penn Station", next_stop="JFK Airport", nextdeparture = "8:00"):
+    def __init__(self, host='localhost', port=65000, xy=[40,0], canstart = False, start=False, done=False, status="Standby", current_stop="Penn Station", next_stop="JFK Airport", nextdeparture ="11:00"):
         self.host = host
         self.port = port
         self.xy = xy
@@ -26,7 +26,7 @@ class ShuttleClient:
         # Split the current time into hours and minutes
         hour, minute = map(int, self.nextdeparture.split(":"))
         # Add 50 minutes
-        minute += 50
+        minute += 110
         if minute >= 60:
             hour += minute // 60
             minute = minute % 60
@@ -39,9 +39,9 @@ class ShuttleClient:
         if self.status == "Standby":
             return f"[TCP] Shuttle S01 | Status: Standby | Eligible to start at 8:00 AM (awaiting command)"
         elif self.waiting_at_jfk:
-            return f"[TCP] Shuttle S01 | Status: Arrived at JFK Airport | Next trip will start soon | Next arrival at JFK: {self.nextdeparture} AM"
+            return f"[TCP] Shuttle S01 | Status: Arrived at JFK Airport | Next trip will start soon | Next arrival at JFK ~ {self.nextdeparture} AM"
         else:
-            return f"[TCP] Shuttle S01 | En route to: {self.next_stop} | Status: {self.status} | Next arrival at JFK: {self.nextdeparture} AM"
+            return f"[TCP] Shuttle S01 | En route to: {self.next_stop} | Status: {self.status} | Next arrival at JFK ~ {self.nextdeparture} AM"
 
     # Contract: ShuttleSim(self) 
     # Purpose: To simulate shuttlemovement
@@ -82,7 +82,7 @@ class ShuttleClient:
     def UDP_beacon(self):
         client = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         while True:
-            client.sendto(f"[UDP] S01 -> Real-Time Location Update: Latitude: {self.xy[0]} Longitude: {self.xy[1]} Status: {self.status}".encode(), (self.host, self.port))
+            client.sendto(f"[UDP] S01 -> Real-Time Location Update: Latitude: {self.xy[0]} Longitude: {round(self.xy[1], 2)} (JFK is [40,36])".encode(), (self.host, self.port))
             time.sleep(10)
 
     
@@ -108,28 +108,26 @@ class ShuttleClient:
                 try:
                     msg = client.recv(1024).decode()
                     if msg:
-                        print(f"Server: {msg}")  # Log the received message for debugging (also used for .txt log)
+                        print(f"Server: {msg}")  # Log the received message for debugging
 
-                        # Handle different commands from the server
                         if msg == "ready":
                             self.status = "Active"
+                            print("[DEBUG] Shuttle status set to Active.")
+
+                            # Start ShuttleSim thread if not already running
+                            if not hasattr(self, 'shuttle_thread') or not self.shuttle_thread.is_alive():
+                                self.shuttle_thread = threading.Thread(target=self.ShuttleSim)
+                                self.shuttle_thread.start()
+
                         elif msg == "delay":
-                            print("Shuttle is delayed.")
                             self.status = "Delayed"
                         elif msg == "shutdown":
-                            print("Shutting down shuttle.")
                             self.done = True
-                        elif msg == "start_route":
-                            print("Starting shuttle route.")
-                            if self.status != "Standby":  # Ensure shuttle can't start until ready
-                                shuttle_thread = threading.Thread(target=self.ShuttleSim)
-                                shuttle_thread.start()
                         else:
                             print(f"Unknown command received: {msg}")
                 except:
-                    print(f"Error receiving message:")
+                    print("Error receiving message.")
                     break
-
         finally:
             print("Disconnected from the server!")
             client.close()
@@ -137,9 +135,8 @@ class ShuttleClient:
 if __name__ == "__main__":
     client = ShuttleClient()
     threading.Thread(target=client.send_message).start()
-    
-    
 
-                    
-        
-                
+
+
+
+
