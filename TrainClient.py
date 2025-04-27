@@ -16,6 +16,7 @@ class TrainClient:
         self.eta = eta
         self.done = done
 
+
     
     # Purpose: Format for displaying location and status to server (TCP)
     def __repr__(self):
@@ -86,20 +87,11 @@ class TrainClient:
             self.status = "Delayed"
             print(f"Train is now delayed.")
                 
-        # If the message received is REROUTE
-        elif parts[0] == "REROUTE":
-            print("Rerouting train to alternate route")
-            self.rerouted = True
         # If the message received is SHUTDOWN
         elif parts[0] == "SHUTDOWN":
             # Shutting down the simulation
             print("Shutting down train simulation")
             self.done = True
-        elif parts[0] == "START_ROUTE":
-            # Resuming the route (bus needs server approval to start)
-            print("Resuming route")
-            self.justArrived = False
-        
 
     def send_message(self):
         client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
