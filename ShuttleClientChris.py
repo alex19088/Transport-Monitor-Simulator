@@ -82,7 +82,7 @@ class ShuttleClient:
     def UDP_beacon(self):
         client = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         while True:
-            client.sendto(f"[UDP] S01 -> Real-Time Location Update: Latitude: {self.xy[0]} Longitude: {round(self.xy[1], 2)} Status: {self.status}".encode(), (self.host, self.port))
+            client.sendto(f"[UDP] S01 -> Real-Time Location Update: Latitude: {self.xy[0]} Longitude: {round(self.xy[1], 2)} (JFK is [40,36])".encode(), (self.host, self.port))
             time.sleep(10)
 
     # Contract:
@@ -118,11 +118,6 @@ class ShuttleClient:
                             if not hasattr(self, 'shuttle_thread') or not self.shuttle_thread.is_alive():
                                 self.shuttle_thread = threading.Thread(target=self.ShuttleSim)
                                 self.shuttle_thread.start()
-
-                            # Force the first movement update immediately
-                            random_num = random.uniform(0.1, 0.3)
-                            self.xy[1] += random_num
-                            print(f"[DEBUG] Immediate movement update: Longitude: {self.xy[1]}")
 
                         elif msg == "delay":
                             self.status = "Delayed"
