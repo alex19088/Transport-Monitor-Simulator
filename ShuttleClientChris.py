@@ -19,7 +19,13 @@ class ShuttleClient:
         self.next_stop = next_stop
         self.nextdeparture = nextdeparture
         self.waiting_at_jfk = False
-    
+
+    # Purpose: To log connections and commands to text file for future reference
+    # Contract: writeFile(user_input: str) -> None
+    def writeFile(self, input: str) -> None:
+        with open("logs.txt", "a") as f:
+            f.write(input + "\n")
+
     # Contract: getArrival(self)
     # Purpose: helper method to dynamically get accurate nextdeparture time         
     def getArrival(self):
@@ -69,7 +75,7 @@ class ShuttleClient:
                 self.xy[1] = 0 # this starts the shuttle back at penn 
                 self.current_stop = "Penn Station"
 
-    # Contract:
+    # Contract: update_statusTCP(self, client)
     # Purpose: Updates shuttle location and status via TCP to the central server every 60 seconds.
     def update_statusTCP(self, client):
         while True:
@@ -132,10 +138,14 @@ class ShuttleClient:
             # Start the TCP status update thread
             status_thread = threading.Thread(target=self.update_statusTCP, args=(client,))
             status_thread.start()
+            self.writeFile("Vehicle S01 Shuttle is Connected via TCP")
+
 
             # Start the UDP beacon thread
             udp_thread = threading.Thread(target=self.UDP_beacon)
             udp_thread.start()
+            self.writeFile("Vehicle S01 Shuttle is Connected via UDP")
+
 
             # Receiving messages from the server
             while not self.done:
@@ -152,6 +162,8 @@ class ShuttleClient:
                             if not hasattr(self, 'shuttle_thread') or not self.shuttle_thread.is_alive():
                                 self.shuttle_thread = threading.Thread(target=self.ShuttleSim)
                                 self.shuttle_thread.start()
+                                self.writeFile("Vehicle S01 Shuttle is [Active] via TCP")
+
 
                         elif msg == "delay":
                             self.status = "Delayed"

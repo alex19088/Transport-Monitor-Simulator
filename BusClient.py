@@ -21,12 +21,19 @@ class BusClient:
         self.rerouted = rerouted
         self.done = done
 
+    # Purpose: To log connections and commands to text file for future reference
+    # Contract: writeFile(user_input: str) -> None
+    def writeFile(self, input: str) -> None:
+        with open("logs.txt", "a") as f:
+            f.write(input + "\n")
+        
     # Purpose: Format for displaying location and status to server (TCP)
     def __repr__(self):
         if self.rerouted == False:
             return f"[TCP] Bus B101 | En Route to Wall Street | Current stop: {self.stops[0]} | Status: {self.status} | ETA to next stop: {round(self.eta,2)} mins"
         else:
             return f"[TCP] Bus B101 | En Route to Wall Street | Current stop: {self.stops2[0]} | Status: {self.status} | ETA to next stop: {round(self.eta,2)} mins"
+        
     # Purpose: To simulate BusB101's route 
     def bus_simulation(self):
         counter = 0
@@ -147,19 +154,23 @@ class BusClient:
         
             self.status = "Delayed"
             print(f"Bus is now delayed.")
-                
+            self.writeFile("Bus is now delayed")
+
         # If the message received is REROUTE
         elif parts[0] == "REROUTE":
             print("Rerouting bus to alternate route")
+            self.writeFile("Bus is now rerouting")
             self.rerouted = True
         # If the message received is SHUTDOWN
         elif parts[0] == "SHUTDOWN":
             # Shutting down the simulation
             print("Shutting down bus simulation")
+            self.writeFile("Bus is now shutdown")
             self.done = True
         elif parts[0] == "START_ROUTE":
             # Resuming the route (bus needs server approval to start)
             print("Resuming route")
+            self.writeFile("Bus is now resuming route")
             self.justArrived = False
 
 
@@ -173,10 +184,14 @@ class BusClient:
 
         recv_thread = threading.Thread(target=self.receive_server_messages, args=(client_socket,))
         recv_thread.start()
+        self.writeFile("Bus is now Connected via TCP")
+
 
         # Starting the route
         bus_thread = threading.Thread(target=self.bus_simulation)
         bus_thread.start()
+        self.writeFile("Bus is now Active")
+
 
         while not self.done:
 

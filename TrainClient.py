@@ -16,6 +16,11 @@ class TrainClient:
         self.eta = eta
         self.done = done
 
+    # Purpose: To log connections and commands to text file for future reference
+    # Contract: writeFile(user_input: str) -> None
+    def writeFile(self, input: str) -> None:
+        with open("logs.txt", "a") as f:
+            f.write(input + "\n")
     
     # Purpose: Format for displaying location and status to server (TCP)
     def __repr__(self):
@@ -89,15 +94,18 @@ class TrainClient:
         # If the message received is REROUTE
         elif parts[0] == "REROUTE":
             print("Rerouting train to alternate route")
+            self.writeFile("Train is rerouted")
             self.rerouted = True
         # If the message received is SHUTDOWN
         elif parts[0] == "SHUTDOWN":
             # Shutting down the simulation
             print("Shutting down train simulation")
+            self.writeFile("Train is shutting down")
             self.done = True
         elif parts[0] == "START_ROUTE":
             # Resuming the route (bus needs server approval to start)
             print("Resuming route")
+            self.writeFile("Train is resuming route")
             self.justArrived = False
         
 
@@ -108,7 +116,7 @@ class TrainClient:
 
         # Sending a message to broadcast successful connection
         client_socket.send('Vehicle CONNECTED: T22 (Train) via TCP '.encode())
-
+        self.writeFile("Train is Connected via TCP")
         
 
         while not self.done:
