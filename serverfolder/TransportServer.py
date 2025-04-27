@@ -29,10 +29,10 @@ class TransportServer:
         self.client_map = {}
 
     # Purpose: To log connections and commands to text file for future reference
-    # Contract: writeUnrecognized(user_input: str) -> None
-    def writeUnrecognized(self, user_input: str) -> None:
+    # Contract: writeFile(user_input: str) -> None
+    def writeFile(self, input: str) -> None:
         with open("logs.txt", "a") as f:
-            f.write(user_input + "\n")
+            f.write(input + "\n")
     
     # Setter method for command
     def set_command(self, command):
@@ -79,12 +79,17 @@ class TransportServer:
             elif action == "DELAY":
                 
                 print(f"[COMMAND] {action} issued to {id}.")
+
+                # Logging to the TXT file
+                self.writeFile(self, f"[COMMAND] {action} issued to {id}, [Acknowledged]")
+
                 # Logging the command to the database
                 self.db.log_admin_command(
                 vehicle_id=id,
                 command_type=action,
                 parameters="DELAY"
                 )
+
                 delay_command = ServerCommands.DelayCommand(self.live_command, client)
                 self.set_command(delay_command)
                 self.send_command()
@@ -94,12 +99,16 @@ class TransportServer:
             elif action == "REROUTE":
                 
                 print(f"[COMMAND] {action} issued to {id}")
+
+                # Logging to the TXT file
+                self.writeFile(self, f"[COMMAND] {action} issued to {id}, [Acknowledged]")
                 # Logging the command to the database
                 self.db.log_admin_command(
                 vehicle_id=id,
                 command_type=action,
                 parameters="REROUTE"
                 )
+
                 reroute_command = ServerCommands.RerouteCommand(self.live_command, client)
                 self.set_command(reroute_command)
                 self.send_command()
@@ -109,10 +118,13 @@ class TransportServer:
                     
                 if id == "U991":
                     print(f"[COMMAND] [REJECTED] {id} -> SHUTDOWN not permitted (private ride - encapsulated rules)")
+                    self.writeFile(self, f"[COMMAND] [Shutdown] issued to {id}, [REJECTED]")
                 action = parts[0].upper()
                 id = parts[1].upper()
                     
                 print(f"[COMMAND] {action} issued to {id}")
+                # Logging the command to the TXT file
+                self.writeFile(self, f"[COMMAND] {action} issued to {id}, [Acknowledged]")
 
                 # Logging the command to the database
                 self.db.log_admin_command(
@@ -132,6 +144,7 @@ class TransportServer:
 
                 # Start/Continue the route
                 print(f"[COMMAND] Starting/Resuming {id}'s route...")
+                self.writeFile(self, f"[COMMAND] Starting/Resuming issued to {id}, [Acknowledged]")
                 # Logging the command to the database
                 self.db.log_admin_command(
                 vehicle_id=id,
@@ -219,7 +232,6 @@ class TransportServer:
                 break
                 
        
-
      # Purpose: To receive messages from clients via UDP
     def UDP_handler(self):
         server_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM) #DGRAM for UDP

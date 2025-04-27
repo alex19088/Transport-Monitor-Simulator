@@ -19,8 +19,8 @@ class ShuttleClient:
         self.next_stop = next_stop
         self.nextdeparture = nextdeparture
         self.waiting_at_jfk = False
-
-    # Contract:
+    
+    # Contract: getArrival(self)
     # Purpose: helper method to dynamically get accurate nextdeparture time         
     def getArrival(self):
         # Split the current time into hours and minutes
@@ -33,7 +33,7 @@ class ShuttleClient:
         # Format back to hour:minute 
         self.nextdeparture = f"{hour}:{minute:02d}"        
 
-    # Contract: 
+    # Contract: repr(self)
     # Purpose: Format for displaying location and status to server (TCP). This one is every minute 
     def __repr__(self):
         if self.status == "Standby":
