@@ -15,7 +15,12 @@ class UberClient:
         self.status = status
         self.done = done
         
-    
+    # Purpose: To log connections and commands to text file for future reference
+    # Contract: writeFile(user_input: str) -> None
+    def writeFile(self, input: str) -> None:
+        with open("logs.txt", "a") as f:
+            f.write(input + "\n")
+
     # Purpose: Format for displaying location and status to server (TCP)
     def __repr__(self):
         return f"[TCP] Uber U991 | In Transit | Approx Location: {self.current_stop} | Status: {self.status}"
@@ -133,10 +138,13 @@ class UberClient:
 
         recv_thread = threading.Thread(target=self.receive_server_messages, args=(client_socket,))
         recv_thread.start()
+        self.writeFile("Vehicle U991 connected via TCP")
 
         # Starting the route
         uber_thread = threading.Thread(target=self.uber_sim, args=(client_socket,))
         uber_thread.start()
+        self.writeFile("Vehicle U991 connected via UDP")
+
         
         while not self.done:
 
