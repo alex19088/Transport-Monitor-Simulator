@@ -27,23 +27,37 @@ class BusClient:
             return f"[TCP] Bus B101 | En Route to Wall Street | Current stop: {self.stops[0]} | Status: {self.status} | ETA to next stop: {round(self.eta,2)} mins"
         else:
             return f"[TCP] Bus B101 | En Route to Wall Street | Current stop: {self.stops2[0]} | Status: {self.status} | ETA to next stop: {round(self.eta,2)} mins"
-    # Purpose: To simulate BusB101's route (add time.sleep(5) and repr here)
+    # Purpose: To simulate BusB101's route 
     def bus_simulation(self):
         counter = 0
         while not self.done:
             if not self.justArrived:
-                time.sleep(1)
-                # Incrementing the coordinates by a random value between 0 and 0.3
-                random_num = random.uniform(0,0.3)
-                self.xy[1] += random_num
+                if self.status == "On Time":
+                    time.sleep(1)
+                    # Incrementing the coordinates by a random value between 0 and 0.3
+                    random_num = random.uniform(0,0.3)
+                    self.xy[1] += random_num
 
-                self.location_tracker(counter)
+                    self.location_tracker(counter)
 
-                # It takes around 2 minutes to reach a stop
-                if self.eta <= 0:
-                    self.eta = 2
+                    # It takes around 2 minutes to reach a stop
+                    if self.eta <= 0:
+                        self.eta = 2
+                    else:
+                        self.eta -= 0.02
                 else:
-                    self.eta -= 0.02
+                    time.sleep(1.5)
+                    # Incrementing the coordinates by a random value between 0 and 0.3
+                    random_num = random.uniform(0,0.3)
+                    self.xy[1] += random_num
+
+                    self.location_tracker(counter)
+
+                    # It takes around 2 minutes to reach a stop
+                    if self.eta <= 0:
+                        self.eta = 2
+                    else:
+                        self.eta -= 0.02
 
 
         
@@ -74,7 +88,7 @@ class BusClient:
             elif self.rerouted == True:
                 if counter == 1:
                     counter += 1
-                    self.stops.pop(0)
+                    self.stops2.pop(0)
                     self.justArrived = True
 
         # Flatiron or Williamsburg
@@ -87,7 +101,7 @@ class BusClient:
             elif self.rerouted == True:
                if counter == 2:
                     counter += 1
-                    self.stops.pop(0)
+                    self.stops2.pop(0)
                     self.justArrived = True
         # Wall Street
         else:
@@ -100,11 +114,8 @@ class BusClient:
             elif self.rerouted == True:
                 if counter == 3:
                     counter += 1
-                    self.stops.pop(0)
+                    self.stops2.pop(0)
                     self.justArrived = True
-
-
-
 
 
     
@@ -128,16 +139,29 @@ class BusClient:
                     self.command_handler(message)  # handle messages
             except:
                 break
-    # To handle commands sent from the server
+    # Purpose: To handle commands sent from the server
     def command_handler(self, message):
         parts = message.split()
+        # If the message received is DELAY
         if parts[0] == "DELAY":
-            try:
-                seconds = int(parts[1])
-                print(f"Delaying for {seconds} seconds")
-                time.sleep(seconds)
-            except ValueError:
-                print("Received invalid delay command")
+        
+            self.status = "Delayed"
+            print(f"Bus is now delayed.")
+                
+        # If the message received is REROUTE
+        elif parts[0] == "REROUTE":
+            print("Rerouting bus to alternate route")
+            self.rerouted = True
+        # If the message received is SHUTDOWN
+        elif parts[0] == "SHUTDOWN":
+            # Shutting down the simulation
+            print("Shutting down bus simulation")
+            self.done = True
+        elif parts[0] == "START_ROUTE":
+            # Resuming the route (bus needs server approval to start)
+            print("Resuming route")
+            self.justArrived = False
+
 
     def send_message(self):
         
@@ -153,15 +177,12 @@ class BusClient:
         # Starting the route
         bus_thread = threading.Thread(target=self.bus_simulation)
         bus_thread.start()
-        
+
         while not self.done:
 
             # TCP connection
             status_thread = threading.Thread(target=self.update_status,args=(client_socket,))
             status_thread.start()
-
-            data = client_socket.recv(1024)
-            print(data.decode())
 
             # Receiving a message from the server and decoding it (not using rn)
             #message = client_socket.recv(1024).decode()
@@ -188,7 +209,7 @@ class BusClient:
     def UDP_beacon(self):
         client = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         while not self.done:
-            client.sendto(f"[UDP] B101 -> Real-Time Location Update: Latitude: {round(self.xy[0],4)} Longitude: {round(self.xy[1],4)} Status: On Time".encode(), (self.host, self.port))
+            client.sendto(f"[UDP] B101 -> Real-Time Location Update: Latitude: {round(self.xy[0],4)} Longitude: {round(self.xy[1],4)} Status: {self.status}".encode(), (self.host, self.port))
             time.sleep(10)
 
 

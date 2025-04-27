@@ -85,7 +85,7 @@ class ShuttleClient:
             client.sendto(f"[UDP] S01 -> Real-Time Location Update: Latitude: {self.xy[0]} Longitude: {self.xy[1]} Status: {self.status}".encode(), (self.host, self.port))
             time.sleep(10)
 
-    # Contract:
+    
     # Purpose: handle sending messages back and forth with server 
     def send_message(self):
         client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)

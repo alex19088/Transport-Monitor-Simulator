@@ -65,7 +65,41 @@ class TrainClient:
                 if counter == 2:
                     client.send(self.__repr__().encode())
                     counter += 1
+    # Purpose : To receive server messages
+    def receive_server_messages(self, client_socket):
+        while not self.done:
+            try:
+                data = client_socket.recv(1024)
+                if data:
+                    message = data.decode()
+                    print(f"[SERVER]: {message}")
+                    self.command_handler(message)  # handle messages
+            except:
+                break
 
+    # Purpose: To handle commands sent from the server
+    def command_handler(self, message):
+        parts = message.split()
+        # If the message received is DELAY
+        if parts[0] == "DELAY":
+            try:
+                # Extracting the seconds from the message
+                seconds = int(parts[2])
+                print(f"Delaying for {seconds} seconds")
+                self.status = "Delayed"
+                # Delaying the simulation for the specified seconds
+                time.sleep(seconds)
+                # After the delay set the status back to "On Time"
+                self.status = "On Time"
+            # if the message is not in the correct format
+            except ValueError:
+                print("Received invalid delay command")
+        # If the message received is SHUTDOWN
+        elif parts[0] == "SHUTDOWN":
+            # Shutting down the simulation
+            print("Shutting down train simulation")
+            self.done = True
+        
 
     def send_message(self):
         client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)

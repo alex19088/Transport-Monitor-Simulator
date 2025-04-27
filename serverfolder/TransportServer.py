@@ -39,62 +39,64 @@ class TransportServer:
         while not self.done:
             command = input("\n[COMMAND/ID]: ").strip()
 
+            if command == "":
+                print("Invalid format, FORMAT -> COMMAND ID (e.g. DELAY T22)")
+                continue
+
             # Splitting the given command into multiple strings
             parts = command.split()
+            action = parts[0].upper()
+            id = parts[1].upper()
 
             # For DELAY
-            if len(parts) == 3 and parts[0].upper() == "DELAY":
-                action = parts[0].upper()
-                id = parts[1].upper()
-                # Checking to make sure the user input a number
-                try:
-                    seconds = int(parts[2])
-                except ValueError:
-                    print("Invalid time duration. Please enter a number.")
-                    continue
+            if action == "DELAY":
                 
-                # Execute the delay command for the given number seconds to the chosen client
-                print(f"[COMMAND] {action} issued to {id} for {seconds} seconds.")
+                print(f"[COMMAND] {action} issued to {id}.")
 
-                delay_command = ServerCommands.DelayCommand(self.live_command, client, seconds)
+                delay_command = ServerCommands.DelayCommand(self.live_command, client)
                 self.set_command(delay_command)
                 self.send_command()
 
-            # For the other commands
-            elif len(parts) == 2:
+                
+            # For REROUTE
+            elif action == "REROUTE":
+                
+                print(f"[COMMAND] {action} issued to {id}")
+
+                reroute_command = ServerCommands.RerouteCommand(self.live_command, client)
+                self.set_command(reroute_command)
+                self.send_command()
+                
+            # For SHUTDOWN
+            elif action == "SHUTDOWN": 
+                    
+                if id == "U991":
+                    print(f"[COMMAND] [REJECTED] {id} -> SHUTDOWN not permitted (private ride - encapsulated rules)")
+                action = parts[0].upper()
+                id = parts[1].upper()
+                    
+                print(f"[COMMAND] {action} issued to {id}")
+
+                shutdown_command = ServerCommands.ShutdownCommand(self.live_command, client)
+                self.set_command(shutdown_command)
+                self.send_command()
+
+            # For START_ROUTE
+            elif action == "START_ROUTE":
                 action = parts[0].upper()
                 id = parts[1].upper()
 
-                if action == "REROUTE":
-                    # Execute the delay command to the chosen client
-                    print(f"[COMMAND] {action} issued to {id}")
+                # Start/Continue the route
+                print(f"[COMMAND] Starting/Resuming {id}'s route...")
+                startroute_command = ServerCommands.StartRouteCommand(self.live_command, client)
+                self.set_command(startroute_command)
+                self.send_command()
 
-                    reroute_command = ServerCommands.RerouteCommand(self.live_command, id)
-                    self.set_command(reroute_command)
-                    self.send_command()
-                
-                elif action == "SHUTDOWN": # Gotta add logic for uber's case
-                    if id == "U991":
-                        print(f"[COMMAND] [REJECTED] {id} -> SHUTDOWN not permitted (private ride - encapsulated rules)")
-                    
-                    # Execute the delay command for the given number seconds to the chosen client
-                    print(f"[COMMAND] {action} issued to {id}")
-
-                    shutdown_command = ServerCommands.ShutdownCommand(self.live_command, id)
-                    self.set_command(shutdown_command)
-                    self.send_command()
-                
-                elif action == "START_ROUTE":
-                    # Execute the delay command for the given number seconds to the chosen client
-                    print(f"[COMMAND] Starting/Resuming {id}'s route...")
-                    startroute_command = ServerCommands.StartRouteCommand(self.live_command, id)
-                    self.set_command(startroute_command)
-                    self.send_command()
-                else:
-                    print("Unknown Command")
+            # To close the server
             elif parts[0] == "q":
                 self.done = True
 
+            # If admin input is not in the correct format
             else: 
                 print("Invalid format, FORMAT -> COMMAND ID (e.g. DELAY T22)")
 
