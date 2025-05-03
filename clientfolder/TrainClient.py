@@ -91,22 +91,13 @@ class TrainClient:
             self.status = "Delayed"
             print(f"Train is now delayed.")
                 
-        # If the message received is REROUTE
-        elif parts[0] == "REROUTE":
-            print("Rerouting train to alternate route")
-            self.writeFile("Train is rerouted")
-            self.rerouted = True
         # If the message received is SHUTDOWN
         elif parts[0] == "SHUTDOWN":
             # Shutting down the simulation
             print("Shutting down train simulation")
             self.writeFile("Train is shutting down")
             self.done = True
-        elif parts[0] == "START_ROUTE":
-            # Resuming the route (bus needs server approval to start)
-            print("Resuming route")
-            self.writeFile("Train is resuming route")
-            self.justArrived = False
+        
         
 
     def send_message(self):

@@ -67,8 +67,8 @@ class DatabaseManager:
             self.conn.commit()
 
     
-    # Insert Methods for Logging
-
+    
+    # Purpose: to log real-time location updates (from UDP or TCP)
     def log_location_update(self, vehicle_id, latitude, longitude, speed, network_status):
         # Log real-time location updates (from UDP or TCP)
         with self.lock:
@@ -77,18 +77,18 @@ class DatabaseManager:
                 VALUES (?, ?, ?, ?, ?, ?)
             ''', (vehicle_id, latitude, longitude, speed, datetime.now().isoformat(), network_status))
             self.conn.commit()
-
+    # To log all admin commands sent
     def log_admin_command(self, vehicle_id, command_type, parameters, status="Pending"):
-        # Log all admin commands sent
+        
         with self.lock:
             self.cursor.execute('''
                 INSERT INTO admin_commands (vehicle_id, command_type, parameters, sent_time, response_time, status)
                 VALUES (?, ?, ?, ?, ?, ?)
             ''', (vehicle_id, command_type, parameters, datetime.now().isoformat(), None, status))
             self.conn.commit()
-
+    # Purpose: to log system level events or errors
     def log_event(self, vehicle_id, event_type, details):
-        # Log system-level events or errors
+       
         with self.lock:
             self.cursor.execute('''
                 INSERT INTO event_logs (vehicle_id, event_type, details, event_time)
@@ -96,8 +96,9 @@ class DatabaseManager:
             ''', (vehicle_id, event_type, details, datetime.now().isoformat()))
             self.conn.commit()
 
+    # Purpose: to update a command with response time and status 
     def update_admin_response(self, command_id, response_status):
-        # Update a command with response time and status (e.g., after client responds)
+        
         with self.lock:
             self.cursor.execute('''
                 UPDATE admin_commands
@@ -107,7 +108,7 @@ class DatabaseManager:
             self.conn.commit()
 
    
-    # data management
+    
     # Purpose: To move location updates older than 15 minutes into csv file
     def archive_old_location_updates(self):
         
@@ -132,27 +133,26 @@ class DatabaseManager:
             self.conn.commit()
 
     
-    # Predefined Queries for Analysis
    
-
+   
+    # Purpose to query vehicles that are currently delayed
     def vehicles_in_delayed_state(self):
-        # Query vehicles that are currently delayed
+        # vehicles that are currently delayed
         with self.lock:
             self.cursor.execute('''
                 SELECT * FROM vehicles WHERE status = "Delayed"
             ''')
             return self.cursor.fetchall()
-
+    # Purpose: to query the list of all SHUTDOWN commands and their outcomes
     def list_shutdown_commands(self):
-        # Query list of all SHUTDOWN commands and their outcomes
+       
         with self.lock:
             self.cursor.execute('''
                 SELECT * FROM admin_commands WHERE command_type = "SHUTDOWN"
             ''')
             return self.cursor.fetchall()
-
+    # Puprose: to query the average response time to admin commands grouped by vehicle
     def average_response_time_by_vehicle(self):
-        # Query average response time to admin commands, grouped by vehicle
         with self.lock:
             self.cursor.execute('''
                 SELECT vehicle_id, AVG(julianday(response_time) - julianday(sent_time)) * 24 * 60 AS avg_minutes

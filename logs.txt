@@ -1,0 +1,8 @@
+Bus is now Connected via TCP
+Bus is now Active
+Train is Connected via TCP
+Vehicle U991 connected via TCP
+Vehicle U991 connected via UDP
+Vehicle S01 Shuttle is Connected via TCP
+Vehicle S01 Shuttle is Connected via UDP
+Vehicle S01 Shuttle is [Active] via TCP
